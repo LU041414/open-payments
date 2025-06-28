@@ -1,170 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Open Payments Playground</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="json-editor.js"></script>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <div class="left-panel">
-        <div class="header">
-          <h1>Open Payments Playground</h1>
-          <p>Interact with the Open Payments API</p>
-        </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>6IXERR</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
 
-        <form id="inputForm">
-          <div class="form-group">
-            <label for="method">HTTP Method</label>
-            <select style="padding: 8px" id="method" class="method-select">
-              <option value="GET">GET</option>
-              <option selected value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="DELETE">DELETE</option>
-              <option value="PATCH">PATCH</option>
-            </select>
-          </div>
+    .header {
+      text-align: center;
+      padding: 30px 0 10px;
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+    }
 
-          <div class="form-group">
-            <label for="url">API Endpoint URL</label>
-            <input
-              type="url"
-              id="url"
-              placeholder="http://localhost:3000/api/create-incoming-payment"
-              required
-            />
-          </div>
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 80px);
+      flex-direction: column;
+      padding: 40px 20px;
+    }
 
-          <div class="form-group">
-            <label>Templates</label>
-            <div class="radio-group">
-              <label class="radio-option">
-                <input
-                  id="none"
-                  type="radio"
-                  name="templateType"
-                  value="none"
-                  checked
-                />
-                <span class="radio-custom"></span>
-                None
-              </label>
+    .hidden {
+      display: none;
+    }
 
-              <label class="radio-option">
-                <input
-                  id="incoming_payment"
-                  type="radio"
-                  name="templateType"
-                  value="incoming_payment"
-                />
-                <span class="radio-custom"></span>
-                Incoming Payment
-              </label>
+    button {
+      margin: 30px 0;
+      padding: 40px 120px;
+      font-size: 32px;
+      width: 500px;
+      border: none;
+      border-radius: 16px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-transform: uppercase;
+    }
 
-              <label class="radio-option">
-                <input
-                  id="quote"
-                  type="radio"
-                  name="templateType"
-                  value="quote"
-                />
-                <span class="radio-custom"></span>
-                Quote
-              </label>
+    button:hover {
+      background-color: #0056b3;
+    }
 
-              <label class="radio-option">
-                <input
-                  id="outgoing_payment_auth"
-                  type="radio"
-                  name="templateType"
-                  value="outgoing_payment_auth"
-                />
-                <span class="radio-custom"></span>
-                Outgoing Payment Auth
-              </label>
+    h1, h2, h3 {
+      margin: 10px;
+      text-align: center;
+    }
 
-              <label class="radio-option">
-                <input
-                  id="outgoing_payment"
-                  type="radio"
-                  name="templateType"
-                  value="outgoing_payment"
-                />
-                <span class="radio-custom"></span>
-                Outgoing Payment
-              </label>
+    .page-content {
+      text-align: center;
+    }
 
-              <label class="radio-option">
-                <input
-                  id="subscription_payment"
-                  type="radio"
-                  name="templateType"
-                  value="subscription_payment"
-                />
-                <span class="radio-custom"></span>
-                Subscription Payment
-              </label>
-            </div>
-          </div>
+    .auth-form {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: left;
+    }
 
-          <div class="form-group" id="bodyGroup">
-            <label
-              >Request Body (JSON)
-              <json-editor
-                class="json-container"
-                id="body-json"
-                value=""
-                indent="3"
-              ></json-editor>
-            </label>
-          </div>
+    .auth-form input, .auth-form select {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
 
-          <button type="submit" class="btn">Send Request</button>
-        </form>
-      </div>
+    .auth-form button {
+      width: 100%;
+      padding: 15px;
+      font-size: 18px;
+      margin-top: 10px;
+    }
 
-      <div class="right-panel">
-        <!-- history section -->
-        <div class="response-panel">
-          <div style="justify-content: space-between" class="response-header">
-            <h2>
-              Response History
-              <span id="historyCount" class="history-badge">0</span>
-            </h2>
-            <div>
-              <button id="clearHistoryBtn" class="history-clear-btn">
-                Clear All
-              </button>
-            </div>
-          </div>
-          <div id="historyList" class="history-list">
-            <div class="panel-empty">No request history yet</div>
-          </div>
-        </div>
+    .toggle-link {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #007bff;
+      cursor: pointer;
+      text-align: center;
+    }
 
-        <!-- respone section -->
-        <div class="response-panel">
-          <div class="response-header">
-            <h2>Response</h2>
-          </div>
-          <div style="user-select: none" id="responseContainer">
-            <div id="statusInfo" class="panel-empty">
-              Fill out the form on the left and click "Send Request"
-            </div>
-            <json-editor
-              class="json-container"
-              id="response-json"
-              value=""
-              contenteditable="false"
-              indent="3"
-            ></json-editor>
-          </div>
-        </div>
-      </div>
+    .profile-card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      margin: 10px;
+    }
+
+    .profile-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .freelancer-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .expertise-select {
+      font-size: 18px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Welcome to 6IXERR</h1>
+  </div>
+
+  <div class="container">
+
+    <!-- Home Page -->
+    <div id="home-page" class="page-content">
+      <button onclick="goToPage('freelancer')">Freelancer</button>
+      <button onclick="goToPage('client')">Client</button>
     </div>
-    <script src="./script.js"></script>
-  </body>
+
+    <!-- Freelancer Auth Page -->
+    <div id="freelancer-auth-page" class="hidden page-content">
+      <h2>Freelancer Access</h2>
+      <div id="signup-form" class="auth-form">
+        <h3>Sign Up</h3>
+        <input type="text" id="signup-name" placeholder="Full Name" />
+        <input type="email" id="signup-email" placeholder="Email" />
+        <input type="password" id="signup-password" placeholder="Password" />
+        <select id="signup-expertise">
+          <option value="">-- Select Expertise --</option>
+          <option>Web Development</option>
+          <option>Graphic Design</option>
+          <option>Content Writing</option>
+          <option>Marketing</option>
+          <option>Mobile Development</option>
+        </select>
+        <input type="file" id="signup-photo" accept="image/*" />
+        <button onclick="handleSignUp()">Sign Up</button>
+        <div class="toggle-link" onclick="toggleAuthForm('login')">Already have an account? Log in</div>
+      </div>
+
+      <div id="login-form" class="auth-form hidden">
+        <h3>Login</h3>
+        <input type="email" id="login-email" placeholder="Email" />
+        <input type="password" id="login-password" placeholder="Password" />
+        <button onclick="handleLogin()">Login</button>
+        <div class="toggle-link" onclick="toggleAuthForm('signup')">Don't have an account? Sign up</div>
+      </div>
+
+      <button onclick="goToPage('home')">Back</button>
+    </div>
+
+    <!-- Freelancer Profile Page -->
+    <div id="freelancer-profile" class="hidden page-content">
+      <h2>Your Profile</h2>
+      <div class="profile-card">
+        <img src="https://via.placeholder.com/120" alt="Profile Photo" id="profile-photo" />
+        <h3 id="profile-name">Name</h3>
+        <p><strong>Expertise:</strong> <span id="profile-expertise"></span></p>
+        <p><strong>Contact:</strong> <span id="profile-email"></span></p>
+      </div>
+      <button onclick="goToPage('home')">Log Out</button>
+    </div>
+
+    <!-- Client Expertise Selection Page -->
+    <div id="client-page" class="hidden page-content">
+      <h2>Select an Expertise</h2>
+      <select class="expertise-select" id="expertise-select" onchange="showFreelancersByExpertise()">
+        <option value="">-- Choose Expertise --</option>
+        <option>Web Development</option>
+        <option>Graphic Design</option>
+        <option>Content Writing</option>
+        <option>Marketing</option>
+        <option>Mobile Development</option>
+      </select>
+
+      <div id="freelancer-list" class="freelancer-list"></div>
+
+      <button onclick="goToPage('home')">Back</button>
+    </div>
+
+
+
+    <!-- Client Payment Page -->
+    <div id="payment-page" class="hidden page-content">
+      <h2>Payment</h2>
+      <div class="profile-card" id="payment-freelancer-card">
+        <!-- Populated by JS -->
+      </div>
+      <button onclick="simulatePayment()">Pay</button>
+      <button onclick="goToPage('client')">Back</button>
+    </div>
+
+    <!-- Payment Input Page -->
+    <div id="payment-input-page" class="hidden page-content">
+      <h2>Enter Payment Details</h2>
+
+      <label for="payment-amount">Amount to Pay (USD):</label><br>
+      <input type="number" id="payment-amount" placeholder="e.g. 100" min="1" /><br><br>
+
+      <label for="payment-pointer">Your Payment Pointer:</label><br>
+      <input type="text" id="payment-pointer" placeholder="e.g. $wallet.example.com/yourname" /><br><br>
+
+      <button onclick="confirmPayment()">Confirm Payment</button>
+      <button onclick="goToPage('payment')">Back</button>
+    </div>
+
+
+
+    <!-- Payment Success Page -->
+    <div id="payment-success-page" class="hidden page-content">
+      <h2>Payment Successful</h2>
+      <p>Thank you! Your payment has been sent to the freelancer.</p>
+      <button onclick="goToPage('home')">Back to Home</button>
+    </div>
+
+
+
+  </div>
+
+    <script>
+    function goToPage(page) {
+      document.querySelectorAll('.page-content').forEach(pageEl => pageEl.classList.add('hidden'));
+      if (page === 'freelancer') {
+        document.getElementById('freelancer-auth-page').classList.remove('hidden');
+        toggleAuthForm('signup');
+      } else if (page === 'client') {
+        document.getElementById('client-page').classList.remove('hidden');
+      } else if (page === 'profile') {
+        document.getElementById('freelancer-profile').classList.remove('hidden');
+      } else if (page === 'payment') {
+        document.getElementById('payment-page').classList.remove('hidden');
+      } else if (page === 'payment-input') {
+        document.getElementById('payment-input-page').classList.remove('hidden');
+
+      } else if (page === 'payment-success') {
+        document.getElementById('payment-success-page').classList.remove('hidden');
+      }
+
+      
+      else {
+        document.getElementById('home-page').classList.remove('hidden');
+      }
+    }
+
+    function toggleAuthForm(form) {
+      document.getElementById('signup-form').classList.toggle('hidden', form !== 'signup');
+      document.getElementById('login-form').classList.toggle('hidden', form !== 'login');
+    }
+
+    function handleSignUp() {
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const expertise = document.getElementById('signup-expertise').value;
+      const photoInput = document.getElementById('signup-photo');
+      const file = photoInput.files[0];
+
+      if (!name || !email || !password || !expertise || !file) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const photoData = event.target.result;
+        let users = JSON.parse(localStorage.getItem('freelancers') || '{}');
+
+        if (users[email]) {
+          alert("Email already exists.");
+          return;
+        }
+
+        users[email] = { name, email, password, expertise, photo: photoData, ratings: [] };
+        localStorage.setItem('freelancers', JSON.stringify(users));
+
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = password;
+        toggleAuthForm('login');
+        alert("Sign-up successful! You can now log in.");
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function handleLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      let users = JSON.parse(localStorage.getItem('freelancers') || '{}');
+
+      if (users[email] && users[email].password === password) {
+        const user = users[email];
+        document.getElementById('profile-name').innerText = user.name;
+        document.getElementById('profile-email').innerText = user.email;
+        document.getElementById('profile-expertise').innerText = user.expertise;
+        document.getElementById('profile-photo').src = user.photo || "https://via.placeholder.com/120";
+
+        const ratings = user.ratings || [];
+        const average = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : 0;
+        document.querySelector('#freelancer-profile .profile-card').querySelector("p").innerHTML = `<strong>Reviews:</strong> ${average} (${ratings.length})`;
+
+        goToPage('profile');
+      } else {
+        alert("Invalid credentials.");
+      }
+    }
+
+    function showFreelancersByExpertise() {
+      const expertise = document.getElementById('expertise-select').value;
+      const container = document.getElementById('freelancer-list');
+      container.innerHTML = '';
+
+      const freelancers = JSON.parse(localStorage.getItem('freelancers') || '{}');
+      const matches = Object.values(freelancers).filter(f => f.expertise === expertise);
+
+      if (matches.length === 0) {
+        container.innerHTML = "<p>No freelancers found for this expertise.</p>";
+        return;
+      }
+
+      matches.forEach(f => {
+        const avg = f.ratings && f.ratings.length ? (f.ratings.reduce((a, b) => a + b, 0) / f.ratings.length).toFixed(1) : "0";
+
+        const card = document.createElement('div');
+        card.className = 'profile-card';
+        card.style.cursor = "pointer";
+        card.innerHTML = `
+          <img src="${f.photo}" alt="Freelancer Photo" />
+          <h3>${f.name}</h3>
+          <p><strong>Expertise:</strong> ${f.expertise}</p>
+          <p><strong>Contact:</strong> ${f.email}</p>
+          <p><strong>Rating:</strong> ${avg} (${(f.ratings || []).length})</p>
+          <label>Rate this freelancer:
+            <select data-email="${f.email}" onchange="rateFreelancer(event)">
+              <option value="">-- Rate --</option>
+              <option value="5">★★★★★</option>
+              <option value="4">★★★★☆</option>
+              <option value="3">★★★☆☆</option>
+              <option value="2">★★☆☆☆</option>
+              <option value="1">★☆☆☆☆</option>
+            </select>
+          </label>
+        `;
+        card.onclick = () => openPaymentPage(f);
+        container.appendChild(card);
+      });
+    }
+
+
+    function rateFreelancer(event) {
+      const rating = parseInt(event.target.value);
+      const email = event.target.dataset.email;
+      const freelancers = JSON.parse(localStorage.getItem('freelancers') || '{}');
+
+      if (!freelancers[email].ratings) {
+        freelancers[email].ratings = [];
+      }
+
+      freelancers[email].ratings.push(rating);
+      localStorage.setItem('freelancers', JSON.stringify(freelancers));
+      alert("Thanks for your rating!");
+
+      // Refresh list
+      showFreelancersByExpertise();
+    }
+
+    function openPaymentPage(freelancer) {
+      const card = document.getElementById('payment-freelancer-card');
+      card.innerHTML = `
+        <img src="${freelancer.photo}" />
+        <h3>${freelancer.name}</h3>
+        <p><strong>Expertise:</strong> ${freelancer.expertise}</p>
+        <p><strong>Contact:</strong> ${freelancer.email}</p>
+        <p><strong>Rating:</strong> ${(freelancer.ratings?.reduce((a, b) => a + b, 0) / (freelancer.ratings?.length || 1)).toFixed(1)}</p>
+      `;
+      card.dataset.email = freelancer.email;
+      goToPage('payment');
+    }
+
+    function simulatePayment() {
+      goToPage('payment-input');
+    }
+
+    /*
+        function simulatePayment() {
+          const email = document.getElementById('payment-freelancer-card').dataset.email;
+          console.log(`Payment sent to ${email}`);
+          goToPage('payment-success');
+        }
+    */
+
+    function confirmPayment() {
+      const pointer = document.getElementById('payment-pointer').value.trim();
+      const amount = document.getElementById('payment-amount').value.trim();
+
+      if (!pointer.startsWith('$')) {
+        alert('Please enter a valid payment pointer (starts with $)');
+        return;
+      }
+
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        alert('Please enter a valid amount greater than 0.');
+        return;
+      }
+
+      alert(`Payment of $${amount} sent from ${pointer}`);
+      goToPage('payment-success');
+    }
+
+
+  </script>
+
+</body>
 </html>
